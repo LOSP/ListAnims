@@ -128,12 +128,14 @@ public class ModListAnims implements IXposedHookZygoteInit
 			protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 				int mLastScrollState = XposedHelpers.getIntField(param.thisObject, "mLastScrollState");
 				int newState = (Integer) param.args[0];
-				boolean mIsScrolling = true;
+				boolean mIsScrolling = (Boolean) XposedHelpers.getAdditionalInstanceField(param.thisObject, "mIsScrolling");
 				
 				// Set the scrolling state
 				if (newState != mLastScrollState) {
 					if (newState == OnScrollListener.SCROLL_STATE_IDLE) {
 						mIsScrolling = false;
+					} else {
+						mIsScrolling = true;
 					}
 				}
 				
