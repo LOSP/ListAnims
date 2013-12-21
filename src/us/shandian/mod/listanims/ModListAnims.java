@@ -216,7 +216,7 @@ public class ModListAnims implements IXposedHookZygoteInit
 					
 					if (Math.abs(initialVelocity) > mDecacheThreshold) {
 						// For long flings, scrolling cache causes stutter, so don't use it
-						XposedHelpers.callMethod(sur, "clearScrollingCache");
+						XposedBridge.invokeOriginalMethod(mClearScrollingCache, sur, null);
 					}
 				}
 			});
