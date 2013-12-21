@@ -25,5 +25,9 @@
     <string name="listview_overshoot_interpolator">Overshoot</string>
     <string name="listview_anticipate_overshoot_interpolator">Anticipate and overshoot</string>
     <string name="listview_bounce_interpolator">Bounce</string>
+	
+	<!-- ListView scrolling cache improvement -->
+	<string name="listview_improve_cache">Improve scrolling cache</string>
+	<string name="listview_improve_cache_des">May make scrolling smoother(Needs reboot)</string>
 
 </resources>

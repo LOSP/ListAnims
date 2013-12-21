@@ -3,18 +3,21 @@ package us.shandian.mod.listanims.ui;
 import android.preference.PreferenceActivity;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.Preference.OnPreferenceClickListener;
+import android.preference.ListPreference;
+import android.preference.CheckBoxPreference;
 import android.content.SharedPreferences;
 import android.content.Context;
-import android.preference.ListPreference;
 import android.os.Bundle;
 
 import us.shandian.mod.listanims.R;
 import us.shandian.mod.listanims.ModListAnims;
 
-public class ListAnimSettings extends PreferenceActivity implements OnPreferenceChangeListener
+public class ListAnimSettings extends PreferenceActivity implements OnPreferenceChangeListener, OnPreferenceClickListener
 {
 	private ListPreference mAnimations;
 	private ListPreference mInterpolators;
+	private CheckBoxPreference mImproveCache;
 	
 	private static SharedPreferences prefs;
 	
@@ -25,6 +28,7 @@ public class ListAnimSettings extends PreferenceActivity implements OnPreference
 		prefs = getSharedPreferences(ModListAnims.PREF, Context.MODE_WORLD_READABLE);
 		mAnimations = (ListPreference) findPreference(ModListAnims.LISTVIEW_ANIMATION);
 		mInterpolators = (ListPreference) findPreference(ModListAnims.LISTVIEW_INTERPOLATOR);
+		mImproveCache = (CheckBoxPreference) findPreference(ModListAnims.LISTVIEW_IMPROVE_CACHE);
 		
 		mAnimations.setValue(String.valueOf(prefs.getInt(ModListAnims.LISTVIEW_ANIMATION, 0)));
 		mAnimations.setSummary(mAnimations.getEntry());
@@ -34,6 +38,9 @@ public class ListAnimSettings extends PreferenceActivity implements OnPreference
 		mInterpolators.setSummary(mInterpolators.getEntry());
 		mInterpolators.setOnPreferenceChangeListener(this);
 		mInterpolators.setEnabled(prefs.getInt(ModListAnims.LISTVIEW_ANIMATION, 0) > 0);
+		
+		mImproveCache.setChecked(prefs.getBoolean(ModListAnims.LISTVIEW_IMPROVE_CACHE, true));
+		mImproveCache.setOnPreferenceClickListener(this);
 	}
 	
 	@Override
@@ -50,6 +57,15 @@ public class ListAnimSettings extends PreferenceActivity implements OnPreference
 			int index = mInterpolators.findIndexOfValue((String) newValue);
 			prefs.edit().putInt(ModListAnims.LISTVIEW_INTERPOLATOR, index).commit();
 			mInterpolators.setSummary(mInterpolators.getEntries()[index]);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean onPreferenceClick(Preference preference)
+	{
+		if (preference == mImproveCache) {
+			prefs.edit().putBoolean(ModListAnims.LISTVIEW_IMPROVE_CACHE, mImproveCache.isChecked()).commit();
 		}
 		return true;
 	}

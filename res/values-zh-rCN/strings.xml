@@ -26,4 +26,8 @@
 	<string name="listview_anticipate_overshoot_interpolator">延迟反弹</string>
 	<string name="listview_bounce_interpolator">终点弹球</string>
 
+	<!-- ListView scrolling cache improvement -->
+	<string name="listview_improve_cache">优化滚动缓存</string>
+	<string name="listview_improve_cache_des">可能提升流畅度(需要重启)</string>
+	
 </resources>

@@ -21,6 +21,9 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam;
+import de.robv.android.xposed.XC_MethodReplacement;
+
+import java.lang.reflect.Method;
 
 import us.shandian.mod.listanims.ui.ListAnimSettings;
 
@@ -34,12 +37,18 @@ public class ModListAnims implements IXposedHookZygoteInit
 	
 	public static final String LISTVIEW_ANIMATION = "listview_animation";
 	public static final String LISTVIEW_INTERPOLATOR = "listview_interpolator";
+	public static final String LISTVIEW_IMPROVE_CACHE = "listview_improve_cache";
+	
+	private boolean mImproveCache;
+	private Method mClearScrollingCache;
 	
 	@Override
 	public void initZygote(StartupParam startupParam) throws Throwable
 	{
 		prefs = new XSharedPreferences(PACKAGE_NAME, PREF);
 		prefs.makeWorldReadable();
+		
+		mImproveCache = prefs.getBoolean(LISTVIEW_IMPROVE_CACHE, true);
 		
 		XposedHelpers.findAndHookMethod(AbsListView.class, "initAbsListView", new XC_MethodHook() {
 			@Override
@@ -59,6 +68,13 @@ public class ModListAnims implements IXposedHookZygoteInit
 						XposedHelpers.setAdditionalInstanceField(msg.obj, "mIsTap", !mIsTap);
 					}
 				});
+				
+				if (mImproveCache) {
+					int mMaximumVelocity = XposedHelpers.getIntField(param.thisObject, "mMaximumVelocity");
+					int mDecacheThreshold = mMaximumVelocity / 2;
+					XposedHelpers.setAdditionalInstanceField(param.thisObject, "mDecacheThreshold", mDecacheThreshold);
+					XposedHelpers.setAdditionalInstanceField(param.thisObject, "mNeedsClearCache", true);
+				}
 				
 				// Then set drawing cache
 				((AbsListView) param.thisObject).setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE | ViewGroup.PERSISTENT_SCROLLING_CACHE);
@@ -149,6 +165,62 @@ public class ModListAnims implements IXposedHookZygoteInit
 				XposedHelpers.setAdditionalInstanceField(param.thisObject, "mIsWidget", true);
 			}
 		});
+		
+		if (mImproveCache) {
+			mClearScrollingCache = XposedHelpers.findMethodExact(AbsListView.class, "clearScrollingCache", new Object[0]);
+			
+			// Clear
+			XposedBridge.hookMethod(mClearScrollingCache, new XC_MethodReplacement() {
+					@Override
+					protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+						Object ret = null;
+						boolean mNeedsClearCache = (Boolean) XposedHelpers.getAdditionalInstanceField(param.thisObject, "mNeedsClearCache");
+						
+						// Do this only when needed
+						if (mNeedsClearCache) {
+							ret = XposedBridge.invokeOriginalMethod(mClearScrollingCache, param.thisObject, null);
+						}
+						
+						// And set it back to needed after all
+						mNeedsClearCache = true;
+						XposedHelpers.setAdditionalInstanceField(param.thisObject, "mNeedsClearCache", mNeedsClearCache);
+						return ret;
+					}
+			});
+			
+			XposedHelpers.findAndHookMethod("android.widget.AbsListView.FlingRunnable", null, "flywheelTouch", new XC_MethodHook() {
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+					// Get the AbsListView.this object
+					Object sur = XposedHelpers.getSurroundingThis(param.thisObject);
+					
+					// Do not need to clear cache
+					XposedHelpers.setAdditionalInstanceField(sur, "mNeedsClearCache", false);
+				}
+			});
+			
+			XposedHelpers.findAndHookMethod("android.widget.AbsListView.FlingRunnable", null, "start", int.class, new XC_MethodHook() {
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+					// Get the AbsListView.this object
+					Object sur = XposedHelpers.getSurroundingThis(param.thisObject);
+					
+					// Do need to clear cache
+					XposedHelpers.setAdditionalInstanceField(sur, "mNeedsClearCache", true);
+					
+					// Get the only param
+					int initialVelocity = (Integer) param.args[0];
+					
+					// Get outer class member
+					int mDecacheThreshold = (Integer) XposedHelpers.getAdditionalInstanceField(sur, "mDecacheThreshold");
+					
+					if (Math.abs(initialVelocity) > mDecacheThreshold) {
+						// For long flings, scrolling cache causes stutter, so don't use it
+						XposedHelpers.callMethod(sur, "clearScrollingCache");
+					}
+				}
+			});
+		}
 	}
 	
 	private View setAnimation(View view, AbsListView thisObject) {
