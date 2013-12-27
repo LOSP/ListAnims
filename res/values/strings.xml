@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+	<string name="app_des">Enables ListView Animations</string>
     <string name="app_name">ListAnims</string>
 	<!-- ListView animation -->
     <string name="listview_animation_title">ListView animation</string>

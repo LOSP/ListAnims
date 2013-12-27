@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+	<string name="app_des">开启全局列表动画功能</string>
     <string name="app_name">列表动画</string>
 	<!-- ListView animation -->
 	<string name="listview_animation_title">列表动画</string>
