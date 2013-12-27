@@ -162,6 +162,7 @@ public class ModListAnims implements IXposedHookZygoteInit
 		XposedHelpers.findAndHookMethod(AbsListView.class, "handleDataChanged", new XC_MethodHook() {
 			@Override
 			protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+				XposedHelpers.setAdditionalInstanceField(param.thisObject, "mIsScrolling", false);
 				XposedHelpers.setAdditionalInstanceField(param.thisObject, "mIsWidget", true);
 			}
 		});
@@ -242,7 +243,7 @@ public class ModListAnims implements IXposedHookZygoteInit
 		int listAnimationInterpolatorMode = prefs.getInt(LISTVIEW_INTERPOLATOR, 0);
 		
 		try {
-			scrollY = thisObject.getChildAt(0).getTop();
+			scrollY = (Integer) XposedHelpers.callMethod(thisObject, "computeVerticalScrollOffset");
 		} catch (NullPointerException e) {
 			scrollY = mPositionV;
 		}
