@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="us.shandian.mod.listanims"
     android:versionCode="1"
-    android:versionName="0.1" >
+    android:versionName="1.0.1" >
 
     <uses-sdk 
         android:minSdkVersion="14" 
@@ -23,7 +23,7 @@
         </activity>
 		
 		<meta-data android:value="true" android:name="xposedmodule"/>
-        <meta-data android:value="30+" android:name="xposedminversion"/>
+        <meta-data android:value="42+" android:name="xposedminversion"/>
         <meta-data android:value="Xposed Module that enables ListView Animations" android:name="xposeddescription"/>
     </application>
 
